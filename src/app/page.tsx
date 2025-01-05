@@ -32,14 +32,14 @@ export default function Home() {
   const [config, setConfig] = useState<GeneratorConfig>(defaultConfig)
 
   const generatePassword = (config: GeneratorConfig) => {
-    let charectors = Object.entries(config)
-      .filter(([key, value]) => key.startsWith('use'))
-      .filter(([key, value]) => value)
+    const charectors = Object.entries(config)
+      .filter(([key]) => key.startsWith('use'))
+      .filter(([value]) => value)
       .map(([key]) => CHAR_POOLS[key])
       .join('');
 
     let password: string
-    let out_temp: Array<string> = []
+    const out_temp: Array<string> = []
     for (let i = 0; i < OUTPUT_COUNT; i++) {
       password = '';
       for (let i = 0; i < config.length; i++) {
@@ -52,7 +52,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    let arr_tmp = []
+    const arr_tmp = []
     for (let i = 0; i < OUTPUT_COUNT; i++) {
       arr_tmp.push("")
     }
@@ -98,8 +98,8 @@ export default function Home() {
     }
   }, [template])
 
-  const onGenerateClick = (event: SyntheticEvent) => {
-    let arr_tmp = []
+  const onGenerateClick = () => {
+    const arr_tmp = []
     for (let i = 0; i < OUTPUT_COUNT; i++) {
       arr_tmp.push((Math.random() * (10 - 1) + 1).toString())
     }
@@ -109,7 +109,7 @@ export default function Home() {
 
 
   const onConfigChange = (event: SyntheticEvent) => {
-    let target = event.currentTarget as HTMLInputElement
+    const target = event.currentTarget as HTMLInputElement
     if (["useLowwer", "useUpper", "useNumber", "useSpecial"].includes(target.id)) {
       setConfig((prev) => ({
         ...prev,
@@ -125,19 +125,15 @@ export default function Home() {
         length: parseInt(target.value)
       }))
     }
-    else {
-      console.log(target.id, target.value)
-    }
   }
 
   const onClickOutput = (event: SyntheticEvent) => {
-    let target = event.currentTarget as HTMLInputElement
-    console.log(target.value.toString())
+    const target = event.currentTarget as HTMLInputElement
     if (window.isSecureContext && navigator.clipboard) {
       navigator.clipboard.writeText(target.value.toString())
         .then(() => {})
         .catch((error) => {
-          console.log(error)
+          console.error(error)
         })
     }
   }
