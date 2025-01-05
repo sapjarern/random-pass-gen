@@ -1,101 +1,208 @@
-import Image from "next/image";
+'use client'
+import { SyntheticEvent, useEffect, useState } from "react";
+
+type GeneratorConfig = {
+  useLowwer: boolean
+  useUpper: boolean
+  useNumber: boolean
+  useSpecial: boolean
+  length: number
+}
+
+const defaultConfig: GeneratorConfig = {
+  useLowwer: true,
+  useUpper: true,
+  useNumber: false,
+  useSpecial: false,
+  length: 8
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const CHAR_POOLS: { [key: string]: string } = {
+    useLowwer: 'abcdefghijklmnopqrstuvwxyz',
+    useUpper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    useNumber: '0123456789',
+    useSpecial: '!@#$%^&*()-_=+[]{}|;:,.<>?/~'
+  };
+  const OUTPUT_COUNT = 5
+
+  const [outputs, setOutputs] = useState<Array<string>>([])
+  const [template, setTemplate] = useState<string>("")
+  const [config, setConfig] = useState<GeneratorConfig>(defaultConfig)
+
+  const generatePassword = (config: GeneratorConfig) => {
+    let charectors = Object.entries(config)
+      .filter(([key, value]) => key.startsWith('use'))
+      .filter(([key, value]) => value)
+      .map(([key]) => CHAR_POOLS[key])
+      .join('');
+
+    let password: string
+    let out_temp: Array<string> = []
+    for (let i = 0; i < OUTPUT_COUNT; i++) {
+      password = '';
+      for (let i = 0; i < config.length; i++) {
+        const randomIndex = Math.floor(Math.random() * charectors.length);
+        password += charectors[randomIndex];
+      }
+      out_temp.push(password)
+    }
+    setOutputs(out_temp)
+  }
+
+  useEffect(() => {
+    let arr_tmp = []
+    for (let i = 0; i < OUTPUT_COUNT; i++) {
+      arr_tmp.push("")
+    }
+    setOutputs(arr_tmp)
+  }, [])
+
+  useEffect(() => {
+    if (template === "MEM") {
+      setConfig({
+        useLowwer: true,
+        useUpper: true,
+        useNumber: true,
+        useSpecial: false,
+        length: 10
+      })
+    }
+    else if (template === "STRONG") {
+      setConfig({
+        useLowwer: true,
+        useUpper: true,
+        useNumber: true,
+        useSpecial: true,
+        length: 15
+      })
+    }
+    else if (template === "KNOX") {
+      setConfig({
+        useLowwer: true,
+        useUpper: true,
+        useNumber: true,
+        useSpecial: true,
+        length: 30
+      })
+    }
+    else if (template === "ENCRYPT") {
+      setConfig({
+        useLowwer: true,
+        useUpper: true,
+        useNumber: true,
+        useSpecial: false,
+        length: 32
+      })
+    }
+  }, [template])
+
+  const onGenerateClick = (event: SyntheticEvent) => {
+    let arr_tmp = []
+    for (let i = 0; i < OUTPUT_COUNT; i++) {
+      arr_tmp.push((Math.random() * (10 - 1) + 1).toString())
+    }
+    setOutputs(arr_tmp)
+    generatePassword(config)
+  }
+
+
+  const onConfigChange = (event: SyntheticEvent) => {
+    let target = event.currentTarget as HTMLInputElement
+    if (["useLowwer", "useUpper", "useNumber", "useSpecial"].includes(target.id)) {
+      setConfig((prev) => ({
+        ...prev,
+        [target.id]: target.checked
+      }))
+    }
+    else if (target.id === "template") {
+      setTemplate(target.value)
+    }
+    else if (target.id === "length") {
+      setConfig((prev) => ({
+        ...prev,
+        length: parseInt(target.value)
+      }))
+    }
+    else {
+      console.log(target.id, target.value)
+    }
+  }
+
+  const onClickOutput = (event: SyntheticEvent) => {
+    let target = event.currentTarget as HTMLInputElement
+    console.log(target.value.toString())
+    if (window.isSecureContext && navigator.clipboard) {
+      navigator.clipboard.writeText(target.value.toString())
+        .then(() => {})
+        .catch((error) => {
+          console.log(error)
+        })
+    }
+  }
+
+  return (
+    <div className="min-w-[50%] p-6 m-auto bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+      <div className="flex flex-row flex-wrap justify-around">
+        <div className="flex-1 mx-2 min-w-40">
+          <div className="flex flex-col">
+            <div className="flex-1">
+              <label htmlFor="template" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select an Template</label>
+              <select id="template" defaultValue={template} onChange={onConfigChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <option value="">Choose a template</option>
+                <option value="MEM">Memorable Passwords</option>
+                <option value="STRONG">Strong Passwords</option>
+                <option value="KNOX">Fort Knox Passwords</option>
+                <option value="ENCRYPT">Encryption Keys</option>
+              </select>
+            </div>
+            <div className="flex-1 mt-2">
+              <input id="useLowwer" type="checkbox" checked={config.useLowwer} onChange={onConfigChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+              <label htmlFor="useLowwer" className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Lower Character</label>
+            </div>
+            <div className="flex-1 mt-2">
+              <input id="useUpper" type="checkbox" checked={config.useUpper} onChange={onConfigChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+              <label htmlFor="useUpper" className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Upper Character</label>
+            </div>
+            <div className="flex-1 mt-2">
+              <input id="useNumber" type="checkbox" checked={config.useNumber} onChange={onConfigChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+              <label htmlFor="useNumber" className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Number Character</label>
+            </div>
+            <div className="flex-1 mt-2">
+              <input id="useSpecial" type="checkbox" checked={config.useSpecial} onChange={onConfigChange} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+              <label htmlFor="useSpecial" className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Special Character</label>
+            </div>
+            <div className="flex-1 mt-2">
+              <label htmlFor="length" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">length</label>
+              <input type="number" id="length" value={config.length} min="8" max="50" onChange={onConfigChange} aria-describedby="helper-text-explanation" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="12" required />
+            </div>
+            <div className="flex-1 mt-2">
+              <button type="button" onClick={onGenerateClick} className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Generate</button>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className="flex-1 mx-2 min-w-60">
+          <div className="flex flex-col">
+            {outputs.map((output, index) => {
+              return (
+                <div className="flex-1" key={`output-${index}`}>
+                  <div className="relative w-full">
+                    <input type="text" id={`output-${index}`} value={output} onClick={onClickOutput} aria-label="disabled input" className="mb-6 bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block min-w-fit w-full p-2.5 cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" readOnly />
+                    {/* <button className="absolute end-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg p-2 inline-flex items-center justify-center">
+                      <span id="default-icon">
+                        <svg className="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
+                          <path d="M16 1h-3.278A1.992 1.992 0 0 0 11 0H7a1.993 1.993 0 0 0-1.722 1H2a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2Zm-3 14H5a1 1 0 0 1 0-2h8a1 1 0 0 1 0 2Zm0-4H5a1 1 0 0 1 0-2h8a1 1 0 1 1 0 2Zm0-5H5a1 1 0 0 1 0-2h2V2h4v2h2a1 1 0 1 1 0 2Z" />
+                        </svg>
+                      </span>
+                    </button> */}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
